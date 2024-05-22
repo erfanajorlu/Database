@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            padding: 10px 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Member List</h1>
+        <table id="membersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <h2>Add Member</h2>
+        <form id="addMemberForm">
+            <input type="text" id="Fname" placeholder="First Name" required>
+            <input type="text" id="Lname" placeholder="Last Name" required>
+            <input type="text" id="Address" placeholder="Address">
+            <input type="email" id="Email" placeholder="Email">
+            <input type="text" id="PhoneNumber" placeholder="Phone Number" required>
+            <button type="submit">Add Member</button>
+        </form>
+    </div>
+
+    <div id="memberDetail" style="display: none;">
+        <h1>Member Details</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="ID"></td>
+                    <td id="FnameDetail"></td>
+                    <td id="LnameDetail"></td>
+                    <td id="AddressDetail"></td>
+                    <td id="EmailDetail"></td>
+                    <td id="PhoneNumberDetail"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <form id="updateForm">
+            <h2>Update Member Details</h2>
+            <label for="FnameInput">First Name</label>
+            <input type="text" id="FnameInput" name="Fname" required>
+
+            <label for="LnameInput">Last Name</label>
+            <input type="text" id="LnameInput" name="Lname" required>
+
+            <label for="AddressInput">Address</label>
+            <input type="text" id="AddressInput" name="Address">
+
+            <label for="EmailInput">Email</label>
+            <input type="email" id="EmailInput" name="Email">
+
+            <label for="PhoneNumberInput">Phone Number</label>
+            <input type="text" id="PhoneNumberInput" name="PhoneNumber" required>
+
+            <button type="submit">Update Member</button>
+        </form>
+        <button onclick="showMembers()">Back to Members</button>
+    </div>
+
+    <script>
+        async function fetchMembers() {
+            const response = await fetch('http://localhost:3000/api/members');
+            const members = await response.json();
+            console.log(members);
+            const membersTableBody = document.querySelector('#membersTable tbody');
+            membersTableBody.innerHTML = '';
+
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.ID}</td>
+                    <td>${member.Fname}</td>
+                    <td>${member.Lname}</td>
+                    <td>${member.Address || ''}</td>
+                    <td>${member.Email || ''}</td>
+                    <td>${member.PhoneNumber}</td>
+                    <td>
+                        <button onclick="deleteMember(event, ${member.ID})">Delete</button>
+                    </td>
+                `;
+                row.addEventListener('click', () => {
+                    history.pushState(null, '', `/api/members/${member.ID}`);
+                    showMemberDetail(member.ID);
+                });
+                membersTableBody.appendChild(row);
+            });
+        }
+    
+        async function deleteMember(event, id) {
+            event.stopPropagation();
+            await fetch(`http://localhost:3000/api/members/${id}`, {
+                method: 'DELETE'
+            });
+            fetchMembers();
+        }
+    
+        document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const Fname = document.getElementById('Fname').value;
+            const Lname = document.getElementById('Lname').value;
+            const Address = document.getElementById('Address').value ? [document.getElementById('Address').value] : [];
+            const Email = document.getElementById('Email').value || null;
+            const PhoneNumber = document.getElementById('PhoneNumber').value;
+            
+            await fetch('http://localhost:3000/api/members', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ Fname, Lname, Address, Email, PhoneNumber })
+            });
+            
+            document.getElementById('addMemberForm').reset();
+            fetchMembers();
+        });
+    
+        async function showMemberDetail(id) {
+            const response = await fetch(`http://localhost:3000/api/members/${id}`);
+            const member = await response.json();
+            
+            if (member && member[0]) {
+                const details = member[0];
+                document.getElementById('ID').textContent = details.ID;
+                document.getElementById('FnameDetail').textContent = details.Fname;
+                document.getElementById('LnameDetail').textContent = details.Lname;
+                document.getElementById('AddressDetail').textContent = details.Address || '';
+                document.getElementById('EmailDetail').textContent = details.Email || '';
+                document.getElementById('PhoneNumberDetail').textContent = details.PhoneNumber;
+            
+                document.getElementById('FnameInput').value = details.Fname;
+                document.getElementById('LnameInput').value = details.Lname;
+                document.getElementById('AddressInput').value = details.Address || '';
+                document.getElementById('EmailInput').value = details.Email || '';
+                document.getElementById('PhoneNumberInput').value = details.PhoneNumber;
+            
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('memberDetail').style.display = 'block';
+            }
+        }
+    
+        function showMembers() {
+            history.pushState(null, '', '/api/members');
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('memberDetail').style.display = 'none';
+        }
+    
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const memberId = document.getElementById('ID').textContent;
+            const updatedMember = {
+                Fname: document.getElementById('FnameInput').value,
+                Lname: document.getElementById('LnameInput').value,
+                Address: document.getElementById('AddressInput').value ? document.getElementById('AddressInput').value.split(',').map(addr => addr.trim()) : [],
+                Email: document.getElementById('EmailInput').value,
+                PhoneNumber: document.getElementById('PhoneNumberInput').value,
+            };
+    
+            const response = await fetch(`http://localhost:3000/api/members/${memberId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedMember),
+            });
+    
+            if (response.ok) {
+                showMemberDetail(memberId);
+            } else {
+                console.error('Failed to update member');
+            }
+        });
+    
+        window.onpopstate = function() {
+            if (window.location.pathname.startsWith('/api/members/')) {
+                const memberId = window.location.pathname.split('/').pop();
+                showMemberDetail(memberId);
+            } else {
+                showMembers();
+            }
+        };
+    
+        fetchMembers();
+    </script>
+    </body>
+</html>
