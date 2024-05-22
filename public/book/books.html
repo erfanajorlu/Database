@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input, form select {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+        }
+        form button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Book Store</h1>
+
+    <h2>Books List</h2>
+    <table id="booksTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Category ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Publisher ID</th>
+                <th>Employee ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Book rows will go here -->
+        </tbody>
+    </table>
+
+    <h2>Add New Book</h2>
+    <form id="addBookForm">
+        <input type="number" name="categoryID" placeholder="Category ID" required>
+        <input type="text" name="Title" placeholder="Title" required>
+        <input type="text" name="Author" placeholder="Author" required>
+        <input type="text" name="ISBN" placeholder="ISBN" required>
+        <input type="text" name="Description" placeholder="Description">
+        <input type="number" step="0.01" name="price" placeholder="Price" required>
+        <input type="number" name="stock" placeholder="Stock" required>
+        <input type="number" name="publisherId" placeholder="Publisher ID" required>
+        <input type="number" name="EmpId" placeholder="Employee ID" required>
+        <button type="submit">Add Book</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchBooks();
+
+            document.getElementById('addBookForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                addBook();
+            });
+        });
+
+        function fetchBooks() {
+            fetch('http://localhost:3000/api/books')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#booksTable tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(book => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${book.ID}</td>
+                            <td>${book.categoryID}</td>
+                            <td>${book.Title}</td>
+                            <td>${book.Author}</td>
+                            <td>${book.ISBN}</td>
+                            <td>${book.Description || ''}</td>
+                            <td>${book.price}</td>
+                            <td>${book.stock}</td>
+                            <td>${book.publisherId}</td>
+                            <td>${book.EmpId}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching books:', error));
+        }
+
+        function addBook() {
+            const form = document.getElementById('addBookForm');
+            const formData = new FormData(form);
+            const bookData = Object.fromEntries(formData.entries());
+
+            fetch('http://localhost:3000/api/books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bookData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchBooks();
+                    form.reset();
+                    alert('Book added successfully!');
+                } else {
+                    alert('Error adding book');
+                }
+            })
+            .catch(error => console.error('Error adding book:', error));
+        }
+    </script>
+
+</body>
+</html>

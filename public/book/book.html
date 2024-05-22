@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Manager</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Book Manager</h1>
+      <div id="book-info"></div>
+      <form id="update-book-form">
+        <h2>Update Book</h2>
+        <input type="text" id="title" placeholder="Title" required />
+        <input type="text" id="author" placeholder="Author" required />
+        <input type="text" id="isbn" placeholder="ISBN" required />
+        <textarea id="description" placeholder="Description"></textarea>
+        <input type="number" id="price" placeholder="Price" required />
+        <input type="number" id="stock" placeholder="Stock" required />
+        <input type="number" id="publisherId" placeholder="publisherId" required />
+        <input type="number" id="categoryID" placeholder="categoryID" required />
+        <button type="submit">Update Book</button>
+      </form>
+      <button id="delete-book-btn">Delete Book</button>
+    </div>
+    <script>
+      // script.js
+
+      document.addEventListener("DOMContentLoaded", () => {
+        var url = window.location.pathname;
+        const bookId = url.substring(url.lastIndexOf("/") + 1);
+        console.log(bookId);
+        // Get the 'id' parameter from the URL    const bookInfo = document.getElementById('book-info');
+        const updateBookForm = document.getElementById("update-book-form");
+        const deleteBookBtn = document.getElementById("delete-book-btn");
+
+        var bookInfo = document.getElementById("book-info");
+        // Fetch and display the book details
+        function getBook() {
+          fetch(`http://localhost:3000/api/books/${bookId}`)
+            .then((response) => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Book not found');
+                    } else {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                }
+                return response.json();
+            })
+            .then((book) => {
+              console.log(book[0]);
+              if (book) {
+                bookInfo.innerHTML = `
+                        <h2>${book[0].Title}</h2>
+                        <p>Author: ${book[0].Author}</p>
+                        <p>ISBN: ${book[0].ISBN}</p>
+                        <p>Description: ${book[0].Description}</p>
+                        <p>Price: $${book[0].price}</p>
+                        <p>Stock: ${book[0].stock}</p>
+                        <p>publisherId: ${book[0].publisherId}</p>
+                        <p>CategoryID: ${book[0].categoryID}</p>
+
+                    `;
+                updateBookForm.title.value = book[0].Title;
+                updateBookForm.author.value = book[0].Author;
+                updateBookForm.isbn.value = book[0].ISBN;
+                updateBookForm.description.value = book[0].Description;
+                updateBookForm.price.value = book[0].price;
+                updateBookForm.stock.value = book[0].stock;
+                updateBookForm.categoryID.value = book[0].publisherId;
+                updateBookForm.publisherId.value = book[0].categoryID;
+              } else {
+                bookInfo.innerHTML = "<p>Book not found</p>";
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        }
+
+        // Update the book details
+        updateBookForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const updatedBook = {
+            Title: updateBookForm.title.value,
+            Author: updateBookForm.author.value,
+            ISBN: updateBookForm.isbn.value,
+            Description: updateBookForm.description.value,
+            price: parseFloat(updateBookForm.price.value),
+            stock: parseInt(updateBookForm.stock.value, 10),
+          };
+
+          fetch(`/api/books/${bookId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedBook),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  "Network response was not ok " + response.statusText
+                );
+              }
+              return response.text();
+            })
+            .then((message) => {
+              alert(message);
+              getBook();
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+
+        // Delete the book
+        deleteBookBtn.addEventListener("click", () => {
+          if (confirm("Are you sure you want to delete this book?")) {
+            fetch(`/api/books/${bookId}`, {
+              method: "DELETE",
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(
+                    "Network response was not ok " + response.statusText
+                  );
+                }
+                return response.text();
+              })
+              .then((message) => {
+                alert(message);
+                bookInfo.innerHTML = "";
+                updateBookForm.reset();
+              })
+              .catch((error) => console.error("Error:", error));
+          }
+        });
+
+        // Initial call to fetch the book details
+        getBook();
+      });
+    </script>
+  </body>
+</html>
