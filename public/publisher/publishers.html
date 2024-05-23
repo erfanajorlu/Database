@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>publisher List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            padding: 10px 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>publisher List</h1>
+        <table id="publishersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <h2>Add publisher</h2>
+        <form id="addpublisherForm">
+            <input type="text" id="Name" placeholder="Name" required>
+            <input type="text" id="PhoneNumber" placeholder="Phone Number" required>
+            <button type="submit">Add publisher</button>
+        </form>
+    </div>
+
+    <div id="publisherDetail" style="display: none;">
+        <h1>publisher Details</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="ID"></td>
+                    <td id="NameDetail"></td>
+                    <td id="PhoneNumberDetail"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <form id="updateForm">
+            <h2>Update publisher Details</h2>
+            <label for="NameInput">First Name</label>
+            <input type="text" id="NameInput" name="Fname" required>
+
+            <label for="PhoneNumberInput">Phone Number</label>
+            <input type="text" id="PhoneNumberInput" name="PhoneNumber" required>
+
+            <button type="submit">Update publisher</button>
+        </form>
+        <button onclick="showpublishers()">Back to publishers</button>
+    </div>
+
+    <script>
+        async function fetchpublishers() {
+            const response = await fetch('http://localhost:3000/api/publishers');
+            const publishers = await response.json();
+            console.log(publishers);
+            const publishersTableBody = document.querySelector('#publishersTable tbody');
+            publishersTableBody.innerHTML = '';
+
+            publishers.forEach(publisher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${publisher.ID}</td>
+                    <td>${publisher.Name}</td>
+                    <td>${publisher.PhoneNumber}</td>
+                    <td>
+                        <button onclick="deletepublisher(event, ${publisher.ID})">Delete</button>
+                    </td>
+                `;
+                row.addEventListener('click', () => {
+                    history.pushState(null, '', `/api/publishers/${publisher.ID}`);
+                    showpublisherDetail(publisher.ID);
+                });
+                publishersTableBody.appendChild(row);
+            });
+        }
+    
+        async function deletepublisher(event, id) {
+            event.stopPropagation();
+            await fetch(`http://localhost:3000/api/publishers/${id}`, {
+                method: 'DELETE'
+            });
+            fetchpublishers();
+        }
+    
+        document.getElementById('addpublisherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const Name = document.getElementById('Name').value;
+            const PhoneNumber = document.getElementById('PhoneNumber').value;
+            
+            await fetch('http://localhost:3000/api/publishers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ Name, PhoneNumber })
+            });
+            
+            document.getElementById('addpublisherForm').reset();
+            fetchpublishers();
+        });
+    
+        async function showpublisherDetail(id) {
+            const response = await fetch(`http://localhost:3000/api/publishers/${id}`);
+            const publisher = await response.json();
+            
+            if (publisher && publisher[0]) {
+                const details = publisher[0];
+                document.getElementById('ID').textContent = details.ID;
+                document.getElementById('NameDetail').textContent = details.Name;
+                document.getElementById('PhoneNumberDetail').textContent = details.PhoneNumber;
+            
+                document.getElementById('NameInput').value = details.Name;
+                document.getElementById('PhoneNumberInput').value = details.PhoneNumber;
+            
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('publisherDetail').style.display = 'block';
+            }
+        }
+    
+        function showpublishers() {
+            history.pushState(null, '', '/api/publishers');
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('publisherDetail').style.display = 'none';
+        }
+    
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const publisherId = document.getElementById('ID').textContent;
+            const updatedpublisher = {
+                Name: document.getElementById('NameInput').value,
+                PhoneNumber: document.getElementById('PhoneNumberInput').value,
+            };
+    
+            const response = await fetch(`http://localhost:3000/api/publishers/${publisherId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedpublisher),
+            });
+    
+            if (response.ok) {
+                showpublisherDetail(publisherId);
+            } else {
+                console.error('Failed to update publisher');
+            }
+        });
+    
+        window.onpopstate = function() {
+            if (window.location.pathname.startsWith('/api/publishers/')) {
+                const publisherId = window.location.pathname.split('/').pop();
+                showpublisherDetail(publisherId);
+            } else {
+                showpublishers();
+            }
+        };
+    
+        fetchpublishers();
+    </script>
+    </body>
+</html>
