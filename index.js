@@ -7,6 +7,7 @@ var bookRoutes = require('./routes/bookRoutes');
 var memberRoutes = require('./routes/memberRoutes');
 var cultureRoutes = require('./routes/cultureRoutes');
 var professionRoutes = require('./routes/professionRoutes');
+var storyRoutes = require('./routes/storyRoutes');
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -18,6 +19,7 @@ app.use('/api', bookRoutes);
 app.use('/api', memberRoutes);
 app.use('/api', cultureRoutes);
 app.use('/api', professionRoutes);
+app.use('/api', storyRoutes);
 
 connection.on('connect', function (err) {
     if (err) {

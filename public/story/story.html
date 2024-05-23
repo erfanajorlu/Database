@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Books</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            padding: 10px 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>story Books</h1>
+        <table id="storyBooksTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>ISBN</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Genre</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <h2>Update Story Book</h2>
+        <form id="updateStoryBookForm">
+            <input type="hidden" id="BookID">
+            <input type="text" id="Title" placeholder="Title" required>
+            <input type="text" id="Author" placeholder="Author" required>
+            <input type="text" id="ISBN" placeholder="ISBN" required>
+            <input type="text" id="Description" placeholder="Description" >
+            <input type="number" step="0.01" id="Price" placeholder="Price" required>
+            <input type="number" id="Stock" placeholder="Stock" required>
+            <input type="text" id="Genre" placeholder="Genre" >
+            <button type="submit">Update Book</button>
+        </form>
+    </div>
+
+    <script>
+        async function fetchStoryBooks() {
+            const response = await fetch('http://localhost:3000/api/storyBooks');
+            const books = await response.json();
+            console.log(books);
+            const storyBooksTableBody = document.querySelector('#storyBooksTable tbody');
+            storyBooksTableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.ID}</td>
+                    <td>${book.Title}</td>
+                    <td>${book.Author}</td>
+                    <td>${book.ISBN}</td>
+                    <td>${book.Description}</td>
+                    <td>${book.price}</td>
+                    <td>${book.stock}</td>
+                    <td>${book.Genre}</td>
+                    <td>
+                        <button onclick="editBook(${book.ID})">Edit</button>
+                    </td>
+                `;
+                storyBooksTableBody.appendChild(row);
+            });
+        }
+
+        function editBook(id) {
+            fetch(`http://localhost:3000/api/storyBooks/${id}`)
+                .then(response => response.json())
+                .then(book => {
+                    document.getElementById('BookID').value = book[0].ID;
+                    document.getElementById('Title').value = book[0].Title;
+                    document.getElementById('Author').value = book[0].Author;
+                    document.getElementById('ISBN').value = book[0].ISBN;
+                    document.getElementById('Description').value = book[0].Description;
+                    document.getElementById('Price').value = book[0].price;
+                    document.getElementById('Stock').value = book[0].stock;
+                    document.getElementById('Genre').value = book[0].Genre;
+                });
+        }
+
+        document.getElementById('updateStoryBookForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = document.getElementById('BookID').value;
+            const updatedBook = {
+                Title: document.getElementById('Title').value,
+                Author: document.getElementById('Author').value,
+                ISBN: document.getElementById('ISBN').value,
+                Description: document.getElementById('Description').value,
+                price: document.getElementById('Price').value,
+                stock: document.getElementById('Stock').value,
+                Genre: document.getElementById('Genre').value
+            };
+
+            fetch(`http://localhost:3000/api/storyBooks/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedBook)
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                fetchstoryBooks();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        fetchStoryBooks();
+    </script>
+</body>
+</html>

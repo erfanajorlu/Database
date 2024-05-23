@@ -3,11 +3,11 @@ var TYPES = require('tedious').TYPES;
 var connection = require('../config/dbConfig');
 
 module.exports = {
-    getAllProfessionBooks: function (callback) {
+    getAllStoryBooks: function (callback) {
         const sql = `
-            SELECT b.*, p.Field 
+            SELECT b.*, s.Genre 
             FROM Book b
-            JOIN Professional p ON b.ID = p.BookID
+            JOIN Story s ON b.ID = s.BookID
         `;
 
         const request = new Request(sql, function (err) {
@@ -35,11 +35,11 @@ module.exports = {
         connection.execSql(request);
     },
 
-    getProfessionBook: function (id, callback) {
+    getStoryBook: function (id, callback) {
         const sql = `
-            SELECT b.*, p.Field
+            SELECT b.*, s.Genre
             FROM Book b
-            JOIN Professional p ON b.ID = p.BookID
+            JOIN Story s ON b.ID = s.BookID
             WHERE b.ID = @ID
         `;
 
@@ -66,14 +66,14 @@ module.exports = {
         connection.execSql(request);
     },
 
-    updateProfessionBook: function (id, book, callback) {
+    updateStoryBook: function (id, book, callback) {
         const updateFields = [];
         const fieldTypes = {
-            Field: TYPES.NVarChar
+            Genre: TYPES.NVarChar
         };
-    
+
         console.log(book);
-    
+
         var request = new Request("", function (err) {
             if (err) {
                 callback(err);
@@ -81,7 +81,7 @@ module.exports = {
                 callback(null);
             }
         });
-    
+
         request.addParameter('ID', TYPES.Int, id);
         for (let key in book) {
             if (book.hasOwnProperty(key) && fieldTypes.hasOwnProperty(key)) {
@@ -89,16 +89,16 @@ module.exports = {
                 request.addParameter(key, fieldTypes[key], book[key] || null);
             }
         }
-        
+
         console.log(request);
         console.log(updateFields);
 
         const sqlQuery = `
-            UPDATE Professional SET Field = @Field WHERE BookID = @ID;
+            UPDATE Story SET Genre = @Genre WHERE BookID = @ID;
         `;
         console.log(sqlQuery);
         request.sqlTextOrProcedure = sqlQuery;
-    
+
         connection.execSql(request);
-    }    
+    }
 };
