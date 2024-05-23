@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee List</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      form {
+        margin-top: 20px;
+      }
+      form input {
+        margin: 5px 0;
+        padding: 5px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      form button {
+        padding: 10px 15px;
+        background-color: blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Employee List</h1>
+      <table id="employeesTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Last Name</th>
+            <th>Post</th>
+            <th>Start Work</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2>Add Employee</h2>
+      <form id="addEmployeeForm">
+        <input type="text" id="Name" placeholder="Name" required />
+        <input type="text" id="Post" placeholder="Post" required />
+        <input type="date" id="Start_work" placeholder="Start_work" required />
+        <button type="submit">Add Employee</button>
+      </form>
+    </div>
+
+    <div id="employeeDetail" style="display: none">
+      <h1>Employee Details</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Post</th>
+            <th>Start Work</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="ID"></td>
+            <td id="NameDetail"></td>
+            <td id="PostDetail"></td>
+            <td id="Start_workDetail"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="updateForm">
+        <h2>Update Employee Details</h2>
+        <label for="Name">Name</label>
+        <input type="text" id="nameInput" name="Name" required />
+
+        <label for="PostInput">Post</label>
+        <input type="text" id="PostInput" name="Post" required />
+
+        <label for="startWorkInput">Start Work</label>
+        <input type="date" id="startWorkInput" name="Start_work" />
+
+        <button type="submit">Update Employees</button>
+      </form>
+      <button onclick="showEmployees()">Back to Employees</button>
+    </div>
+
+    <script>
+      async function fetchEmployees() {
+        const response = await fetch("http://localhost:3000/api/employees");
+        const employees = await response.json();
+        console.log(employees);
+        const employeesTableBody = document.querySelector(
+          "#employeesTable tbody"
+        );
+        employeesTableBody.innerHTML = "";
+
+        employees.forEach((employee) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${employee.ID}</td>
+                    <td>${employee.Name}</td>
+                    <td>${employee.Post}</td>
+                    <td>${employee.Start_work}</td>
+                    <td>
+                        <button onclick="deleteEmployee(event, ${employee.ID})">Delete</button>
+                    </td>
+                `;
+          row.addEventListener("click", () => {
+            history.pushState(null, "", `/api/employees/${employee.ID}`);
+            showEmployeeDetail(employee.ID);
+          });
+          employeesTableBody.appendChild(row);
+        });
+      }
+
+      async function deleteEmployee(event, id) {
+        event.stopPropagation();
+        await fetch(`http://localhost:3000/api/employees/${id}`, {
+          method: "DELETE",
+        });
+        fetchEmployees();
+      }
+
+      document
+        .getElementById("addEmployeeForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const Name = document.getElementById("Name").value;
+          const Post = document.getElementById("Post").value;
+          const Start_work = document.getElementById("Start_work").value;
+
+          await fetch("http://localhost:3000/api/employees", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ Name, Post, Start_work }),
+          });
+
+          document.getElementById("addEmployeeForm").reset();
+          fetchEmployees();
+        });
+
+      async function showEmployeeDetail(id) {
+        const response = await fetch(
+          `http://localhost:3000/api/employees/${id}`
+        );
+        const employee = await response.json();
+
+        if (employee && employee[0]) {
+          const details = employee[0];
+          console.log(details);
+          document.getElementById("ID").textContent = details.ID;
+          document.getElementById("NameDetail").textContent = details.Name;
+          document.getElementById("PostDetail").textContent = details.Post;
+          document.getElementById("Start_workDetail").textContent = new Date(
+            details.Start_work
+          ).toLocaleDateString("en-US");
+
+          document.getElementById("nameInput").value = details.Name;
+          document.getElementById("PostInput").value = details.Post;
+          document.getElementById("startWorkInput").value = new Date(
+            details.Start_work
+          )
+            .toISOString()
+            .split("T")[0];
+
+          document.getElementById("app").style.display = "none";
+          document.getElementById("employeeDetail").style.display = "block";
+        }
+      }
+
+      function showEmployees() {
+        history.pushState(null, "", "/api/employees");
+        document.getElementById("app").style.display = "block";
+        document.getElementById("employeeDetail").style.display = "none";
+      }
+
+      document
+        .getElementById("updateForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const employeeId = document.getElementById("ID").textContent;
+          const updatedEmployee = {
+            Name: document.getElementById("nameInput").value,
+            Post: document.getElementById("PostInput").value,
+            Start_work: document.getElementById("startWorkInput").value,
+          };
+
+          const response = await fetch(
+            `http://localhost:3000/api/employees/${employeeId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updatedEmployee),
+            }
+          );
+
+          if (response.ok) {
+            showEmployeeDetail(employeeId);
+          } else {
+            console.error("Failed to update employee");
+          }
+        });
+
+      window.onpopstate = function () {
+        if (window.location.pathname.startsWith("/api/employees/")) {
+          const employeeId = window.location.pathname.split("/").pop();
+          showEmployeeDetail(employeeId);
+        } else {
+          showEmployees();
+        }
+      };
+
+      fetchEmployees();
+    </script>
+  </body>
+</html>
