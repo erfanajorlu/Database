@@ -4,8 +4,9 @@ var cors = require('cors');
 const path = require('path')
 var app = express();
 var bookRoutes = require('./routes/bookRoutes');
-var memberRoutes = require('./routes/memberRoutes');  
-var cultureRoutes = require('./routes/cultureRoutes')
+var memberRoutes = require('./routes/memberRoutes');
+var cultureRoutes = require('./routes/cultureRoutes');
+var professionRoutes = require('./routes/professionRoutes');
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -16,13 +17,14 @@ app.use(bodyParser.json());
 app.use('/api', bookRoutes);
 app.use('/api', memberRoutes);
 app.use('/api', cultureRoutes);
+app.use('/api', professionRoutes);
 
-connection.on('connect', function(err) {
+connection.on('connect', function (err) {
     if (err) {
         console.log('Error: ', err);
     } else {
         console.log("Connected to the database");
-        app.listen(3000, function() {
+        app.listen(3000, function () {
             console.log("Server is running on port 3000");
         });
     }
