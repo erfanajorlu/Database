@@ -9,7 +9,8 @@ var cultureRoutes = require('./routes/cultureRoutes');
 var professionRoutes = require('./routes/professionRoutes');
 var storyRoutes = require('./routes/storyRoutes');
 var employeeRoutes = require('./routes/employeeRoutes');
-var librarianRoutes = require('./routes/librarianRoutes')
+var librarianRoutes = require('./routes/librarianRoutes');
+var managerRoutes = require('./routes/managerRoutes');
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -24,7 +25,7 @@ app.use('/api', professionRoutes);
 app.use('/api', storyRoutes);
 app.use('/api', employeeRoutes);
 app.use('/api', librarianRoutes);
-
+app.use('/api', managerRoutes);
 
 connection.on('connect', function (err) {
     if (err) {
