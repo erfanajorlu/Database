@@ -11,7 +11,8 @@ var storyRoutes = require('./routes/storyRoutes');
 var employeeRoutes = require('./routes/employeeRoutes');
 var librarianRoutes = require('./routes/librarianRoutes');
 var managerRoutes = require('./routes/managerRoutes');
-var publisherRoutes = require('./routes/publisherRoutes')
+var publisherRoutes = require('./routes/publisherRoutes');
+var loanRoutes = require('./routes/loanRoutes');
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -28,6 +29,7 @@ app.use('/api', employeeRoutes);
 app.use('/api', librarianRoutes);
 app.use('/api', managerRoutes);
 app.use('/api', publisherRoutes);
+app.use('/api', loanRoutes);
 
 connection.on('connect', function (err) {
     if (err) {

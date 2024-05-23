@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loan List</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      form {
+        margin-top: 20px;
+      }
+      form input {
+        margin: 5px 0;
+        padding: 5px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      form button {
+        padding: 10px 15px;
+        background-color: blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Loan List</h1>
+      <table id="loansTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Book ID</th>
+            <th>Member ID</th>
+            <th>Lending Date</th>
+            <th>Return Date</th>
+            <th>Emp ID</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2>Add Loan</h2>
+      <form id="addLoanForm">
+        <input type="number" id="BookId" placeholder="Book ID" required />
+        <input type="number" id="MemberId" placeholder="Member ID" required />
+        <input
+          type="date"
+          id="lendingDate"
+          placeholder="Lending Date"
+          required
+        />
+        <input type="number" id="EmpId" placeholder="Employee ID" required />
+        <button type="submit">Add Loan</button>
+      </form>
+    </div>
+
+    <div id="loanDetail" style="display: none">
+      <h1>Loan Details</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Book ID</th>
+            <th>Member ID</th>
+            <th>Lending Date</th>
+            <th>Return Date</th>
+            <th>Emp ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="ID"></td>
+            <td id="BookIdDetail"></td>
+            <td id="MemberIdDetail"></td>
+            <td id="lendingDateDetail"></td>
+            <td id="ReturnDateDetail"></td>
+            <td id="EmpIdDetail"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="updateForm">
+        <h2>Update Loan Details</h2>
+        <label for="BookIdInput">Book ID</label>
+        <input type="number" id="BookIdInput" name="BookId" required />
+
+        <label for="MemberIdInput">Member ID</label>
+        <input type="number" id="MemberIdInput" name="MemberId" required />
+
+        <label for="lendingDateInput">Lending Date</label>
+        <input type="date" id="lendingDateInput" name="lendingDate" required />
+
+        <label for="ReturnDateInput">Return Date</label>
+        <input type="date" id="ReturnDateInput" name="ReturnDate" />
+
+        <label for="EmpIdInput">Employee ID</label>
+        <input type="number" id="EmpIdInput" name="EmpId" required />
+
+        <button type="submit">Update Loan</button>
+      </form>
+      <button onclick="showLoans()">Back to Loans</button>
+    </div>
+
+    <script>
+      async function fetchLoans() {
+        const response = await fetch("http://localhost:3000/api/loans");
+        const loans = await response.json();
+        const loansTableBody = document.querySelector("#loansTable tbody");
+        loansTableBody.innerHTML = "";
+
+        loans.forEach((loan) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${loan.ID}</td>
+                    <td>${loan.BookId}</td>
+                    <td>${loan.MemberId}</td>
+                    <td>${
+                      new Date(loan.lendingDate).toISOString().split("T")[0]
+                    }</td>
+                    <td>${
+                      loan.ReturnDate
+                        ? new Date(loan.ReturnDate).toISOString().split("T")[0]
+                        : ""
+                    }</td>
+                    <td>${loan.EmpId}</td>
+                    <td>
+                        <button onclick="deleteLoan(event, ${
+                          loan.ID
+                        })">Delete</button>
+                    </td>
+                `;
+          row.addEventListener("click", () => {
+            history.pushState(null, "", `/api/loans/${loan.ID}`);
+            showLoanDetail(loan.ID);
+          });
+          loansTableBody.appendChild(row);
+        });
+      }
+
+      async function deleteLoan(event, id) {
+        event.stopPropagation();
+        await fetch(`http://localhost:3000/api/loans/${id}`, {
+          method: "DELETE",
+        });
+        fetchLoans();
+      }
+
+      document
+        .getElementById("addLoanForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const BookId = document.getElementById("BookId").value;
+          const MemberId = document.getElementById("MemberId").value;
+          const lendingDate = document.getElementById("lendingDate").value;
+          const EmpId = document.getElementById("EmpId").value;
+
+          await fetch("http://localhost:3000/api/loans", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ BookId, MemberId, lendingDate, EmpId }),
+          });
+
+          document.getElementById("addLoanForm").reset();
+          fetchLoans();
+        });
+
+      async function showLoanDetail(id) {
+        const response = await fetch(`http://localhost:3000/api/loans/${id}`);
+        const loan = await response.json();
+
+        if (loan && loan[0]) {
+          const details = loan[0];
+          document.getElementById("ID").textContent = details.ID;
+          document.getElementById("BookIdDetail").textContent = details.BookId;
+          document.getElementById("MemberIdDetail").textContent =
+            details.MemberId;
+          document.getElementById("lendingDateDetail").textContent = new Date(
+            details.lendingDate
+          )
+            .toISOString()
+            .split("T")[0];
+          document.getElementById("ReturnDateDetail").textContent =
+            details.ReturnDate
+              ? new Date(details.ReturnDate).toISOString().split("T")[0]
+              : "";
+          document.getElementById("EmpIdDetail").textContent = details.EmpId;
+
+          document.getElementById("BookIdInput").value = details.BookId;
+          document.getElementById("MemberIdInput").value = details.MemberId;
+          document.getElementById("lendingDateInput").value = new Date(
+            details.lendingDate
+          )
+            .toISOString()
+            .split("T")[0];
+          document.getElementById("ReturnDateInput").value = details.ReturnDate
+            ? new Date(details.ReturnDate).toISOString().split("T")[0]
+            : "";
+          document.getElementById("EmpIdInput").value = details.EmpId;
+
+          document.getElementById("app").style.display = "none";
+          document.getElementById("loanDetail").style.display = "block";
+        }
+      }
+
+      function showLoans() {
+        history.pushState(null, "", "/api/loans");
+        document.getElementById("app").style.display = "block";
+        document.getElementById("loanDetail").style.display = "none";
+      }
+
+      document
+        .getElementById("updateForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const loanId = document.getElementById("ID").textContent;
+          const updatedLoan = {
+            BookId: document.getElementById("BookIdInput").value,
+            MemberId: document.getElementById("MemberIdInput").value,
+            lendingDate: document.getElementById("lendingDateInput").value,
+            ReturnDate: document.getElementById("ReturnDateInput").value,
+            EmpId: document.getElementById("EmpIdInput").value,
+          };
+
+          const response = await fetch(
+            `http://localhost:3000/api/loans/${loanId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updatedLoan),
+            }
+          );
+
+          if (response.ok) {
+            showLoanDetail(loanId);
+          } else {
+            console.error("Failed to update loan");
+          }
+        });
+
+      window.onpopstate = function () {
+        if (window.location.pathname.startsWith("/api/loans/")) {
+          const loanId = window.location.pathname.split("/").pop();
+          showLoanDetail(loanId);
+        } else {
+          showLoans();
+        }
+      };
+
+      fetchLoans();
+    </script>
+  </body>
+</html>
