@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Librarian</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      form {
+        margin-top: 20px;
+      }
+      form input {
+        margin: 5px 0;
+        padding: 5px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      form button {
+        padding: 10px 15px;
+        background-color: blue;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>librarian</h1>
+      <table id="librarianTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Post</th>
+            <th>Start Work</th>
+            <th>Specialization</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2>Update librarian</h2>
+      <form id="updatelibrarianForm">
+        <input type="hidden" id="ID">
+        <h2>Update Employee Details</h2>
+        <label for="nameInput">Name</label>
+        <input type="text" id="nameInput" name="Name" required />
+
+        <label for="PostInput">Post</label>
+        <input type="text" id="PostInput" name="Post" required />
+
+        <label for="startWorkInput">Start Work</label>
+        <input type="date" id="startWorkInput" name="Start_work" />
+
+        <label for="specialization">Specialization</label>
+        <input type="text" id="specialization" name="Specialization" />
+
+        <button type="submit">Update Employee</button>
+        <div id="updateError" class="error" style="display: none">
+          Post must be either 'manager' or 'librarian'
+        </div>
+      </form>
+    </div>
+
+    <script>
+      async function fetchLibrarian() {
+        const response = await fetch("http://localhost:3000/api/librarian");
+        const books = await response.json();
+        console.log(books);
+        const librarianTableBody = document.querySelector(
+          "#librarianTable tbody"
+        );
+        librarianTableBody.innerHTML = "";
+
+        books.forEach((employee) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${employee.ID}</td>
+                    <td>${employee.Name}</td>
+                    <td>${employee.Post}</td>
+                    <td>${
+                      new Date(employee.Start_work).toISOString().split("T")[0]
+                    }</td>
+                    <td>${employee.Specialization}</td>
+                    <button onclick="editLibrarian(${
+                      employee.ID
+                    })">Edit</button>
+
+                `;
+          librarianTableBody.appendChild(row);
+        });
+      }
+
+      function editLibrarian(id) {
+        fetch(`http://localhost:3000/api/librarian/${id}`)
+          .then((response) => response.json())
+          .then((details) => {
+            document.getElementById("ID").value = details[0].ID;
+            document.getElementById("nameInput").value = details[0].Name;
+            document.getElementById("PostInput").value = details[0].Post;
+            document.getElementById("startWorkInput").value = new Date(
+              details[0].Start_work
+            )
+              .toISOString()
+              .split("T")[0];
+            document.getElementById("specialization").value =
+              details[0].Specialization;
+          });
+      }
+
+      document
+        .getElementById("updatelibrarianForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const Post = document.getElementById("PostInput").value.toLowerCase();
+          const updatedEmployee = {
+            Specialization: document.getElementById("specialization").value,
+          };
+
+          const id = document.getElementById("ID").value;
+          document.getElementById("updateError").style.display = "none";
+
+          alert("Update successfully");
+          fetch(`http://localhost:3000/api/librarian/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedEmployee),
+          });
+
+        });
+
+      fetchLibrarian();
+    </script>
+  </body>
+</html>
