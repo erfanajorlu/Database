@@ -5,6 +5,7 @@ const path = require('path')
 var app = express();
 var bookRoutes = require('./routes/bookRoutes');
 var memberRoutes = require('./routes/memberRoutes');  
+var cultureRoutes = require('./routes/cultureRoutes')
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/api', bookRoutes);
 app.use('/api', memberRoutes);
+app.use('/api', cultureRoutes);
 
 connection.on('connect', function(err) {
     if (err) {
