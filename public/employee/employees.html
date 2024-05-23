@@ -39,6 +39,10 @@
         border: none;
         cursor: pointer;
       }
+      .error {
+        color: red;
+        margin-top: 5px;
+      }
     </style>
   </head>
   <body>
@@ -48,7 +52,7 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Last Name</th>
+            <th>Name</th>
             <th>Post</th>
             <th>Start Work</th>
             <th>Actions</th>
@@ -60,9 +64,17 @@
       <h2>Add Employee</h2>
       <form id="addEmployeeForm">
         <input type="text" id="Name" placeholder="Name" required />
-        <input type="text" id="Post" placeholder="Post" required />
-        <input type="date" id="Start_work" placeholder="Start_work" required />
+        <input
+          type="text"
+          id="Post"
+          placeholder="Post (manager/librarian)"
+          required
+        />
+        <input type="date" id="Start_work" placeholder="Start Work" required />
         <button type="submit">Add Employee</button>
+        <div id="addError" class="error" style="display: none">
+          Post must be either 'manager' or 'librarian'
+        </div>
       </form>
     </div>
 
@@ -89,7 +101,7 @@
 
       <form id="updateForm">
         <h2>Update Employee Details</h2>
-        <label for="Name">Name</label>
+        <label for="nameInput">Name</label>
         <input type="text" id="nameInput" name="Name" required />
 
         <label for="PostInput">Post</label>
@@ -98,7 +110,10 @@
         <label for="startWorkInput">Start Work</label>
         <input type="date" id="startWorkInput" name="Start_work" />
 
-        <button type="submit">Update Employees</button>
+        <button type="submit">Update Employee</button>
+        <div id="updateError" class="error" style="display: none">
+          Post must be either 'manager' or 'librarian'
+        </div>
       </form>
       <button onclick="showEmployees()">Back to Employees</button>
     </div>
@@ -119,7 +134,10 @@
                     <td>${employee.ID}</td>
                     <td>${employee.Name}</td>
                     <td>${employee.Post}</td>
-                    <td>${employee.Start_work}</td>
+                    <td>${ new Date(
+            employee.Start_work
+          ).toISOString()
+          .split("T")[0]}</td>
                     <td>
                         <button onclick="deleteEmployee(event, ${employee.ID})">Delete</button>
                     </td>
@@ -145,8 +163,15 @@
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           const Name = document.getElementById("Name").value;
-          const Post = document.getElementById("Post").value;
+          const Post = document.getElementById("Post").value.toLowerCase();
           const Start_work = document.getElementById("Start_work").value;
+
+          if (Post !== "manager" && Post !== "librarian") {
+            document.getElementById("addError").style.display = "block";
+            return;
+          }
+
+          document.getElementById("addError").style.display = "none";
 
           await fetch("http://localhost:3000/api/employees", {
             method: "POST",
@@ -168,21 +193,20 @@
 
         if (employee && employee[0]) {
           const details = employee[0];
-          console.log(details);
           document.getElementById("ID").textContent = details.ID;
           document.getElementById("NameDetail").textContent = details.Name;
           document.getElementById("PostDetail").textContent = details.Post;
           document.getElementById("Start_workDetail").textContent = new Date(
             details.Start_work
-          ).toLocaleDateString("en-US");
+          ).toISOString()
+          .split("T")[0];
 
           document.getElementById("nameInput").value = details.Name;
           document.getElementById("PostInput").value = details.Post;
           document.getElementById("startWorkInput").value = new Date(
             details.Start_work
-          )
-            .toISOString()
-            .split("T")[0];
+          ).toISOString()
+          .split("T")[0];
 
           document.getElementById("app").style.display = "none";
           document.getElementById("employeeDetail").style.display = "block";
@@ -200,11 +224,20 @@
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           const employeeId = document.getElementById("ID").textContent;
+          const Post = document.getElementById("PostInput").value.toLowerCase();
           const updatedEmployee = {
             Name: document.getElementById("nameInput").value,
-            Post: document.getElementById("PostInput").value,
+            Post: Post,
             Start_work: document.getElementById("startWorkInput").value,
           };
+
+          console.log(updatedEmployee);
+          if (Post !== "manager" && Post !== "librarian") {
+            document.getElementById("updateError").style.display = "block";
+            return;
+          }
+
+          document.getElementById("updateError").style.display = "none";
 
           const response = await fetch(
             `http://localhost:3000/api/employees/${employeeId}`,
