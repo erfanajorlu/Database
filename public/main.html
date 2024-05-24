@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="10" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Management System</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Library Management System</h1>
+      <div class="button-container">
+        <button class="api-button" data-api="books">Books</button>
+        <button class="api-button" data-api="members">Members</button>
+        <button class="api-button" data-api="cultureBooks">Cultures</button>
+        <button class="api-button" data-api="professionBooks">
+          Professions
+        </button>
+        <button class="api-button" data-api="storyBooks">Stories</button>
+        <button class="api-button" data-api="employees">Employees</button>
+        <button class="api-button" data-api="librarian">Librarians</button>
+        <button class="api-button" data-api="manager">Managers</button>
+        <button class="api-button" data-api="publishers">Publishers</button>
+        <button class="api-button" data-api="loans">Loans</button>
+      </div>
+      <div id="content"></div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const buttons = document.querySelectorAll(".api-button");
+        buttons.forEach((button) => {
+          button.addEventListener("click", async () => {
+            const api = button.getAttribute("data-api");
+            const response = await fetch(`http://localhost:3000/api/${api}`);
+            window.history.pushState(
+              "object or string",
+              "Title",
+              "/api/" + api
+            );
+            window.location = window.location.href;
+            const data = await response.json();
+            const contentDiv = document.getElementById("content");
+            contentDiv.innerHTML = `<h2>${
+              api.charAt(0).toUpperCase() + api.slice(1)
+            }</h2>`;
+            contentDiv.innerHTML +=
+              "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

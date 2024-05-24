@@ -31,6 +31,10 @@ app.use('/api', managerRoutes);
 app.use('/api', publisherRoutes);
 app.use('/api', loanRoutes);
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'main.html'));
+});
+
 connection.on('connect', function (err) {
     if (err) {
         console.log('Error: ', err);
