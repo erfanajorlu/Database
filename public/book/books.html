@@ -113,7 +113,11 @@
             const form = document.getElementById('addBookForm');
             const formData = new FormData(form);
             const bookData = Object.fromEntries(formData.entries());
-
+            bookData.EmpId = parseInt(bookData.EmpId);
+            bookData.categoryID = parseInt(bookData.categoryID);
+            bookData.price = parseFloat(bookData.price);
+            bookData.stock = parseInt(bookData.stock);
+            console.log(bookData);
             fetch('http://localhost:3000/api/books', {
                 method: 'POST',
                 headers: {
