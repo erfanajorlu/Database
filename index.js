@@ -13,6 +13,7 @@ var librarianRoutes = require('./routes/librarianRoutes');
 var managerRoutes = require('./routes/managerRoutes');
 var publisherRoutes = require('./routes/publisherRoutes');
 var loanRoutes = require('./routes/loanRoutes');
+var publisherBookRoutes = require('./routes/publisherBookRoutes');
 var connection = require('./config/dbConfig');
 
 // Serve static files from the root directory
@@ -30,6 +31,7 @@ app.use('/api', librarianRoutes);
 app.use('/api', managerRoutes);
 app.use('/api', publisherRoutes);
 app.use('/api', loanRoutes);
+app.use('/api', publisherBookRoutes);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'main.html'));

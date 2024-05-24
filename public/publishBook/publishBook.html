@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publisher-book List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form input {
+            margin: 5px 0;
+            padding: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        form button {
+            padding: 10px 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Publisher-book List</h1>
+        <table id="membersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Publisher ID</th>
+                    <th>Book ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <h2>Add pubish and book</h2>
+        <form id="addMemberForm">
+            <input type="number" id="PublisherId" placeholder="Publisher ID" required>
+            <input type="number" id="BookID" placeholder="Book ID" required>
+            <button type="submit">Add publisher-book</button>
+        </form>
+    </div>
+
+    <div id="memberDetail" style="display: none;">
+        <h1>publisher Details</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>publisher ID</th>
+                    <th>Book ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="ID"></td>
+                    <td id="PublisherIdDetail"></td>
+                    <td id="BookIDDetail"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <form id="updateForm">
+            <h2>Update publisher-book Details</h2>
+            <label for="PublisherIdInput">Publisher ID</label>
+            <input type="number" id="PublisherIdInput" name="PublisherIdInput" required>
+
+            <label for="BookIDInput">Book ID</label>
+            <input type="number" id="BookIDInput" name="BookIDInput" required>
+
+            <button type="submit">Update Member</button>
+        </form>
+        <button onclick="showMembers()">Back to Members</button>
+    </div>
+
+    <script>
+        async function fetchMembers() {
+            const response = await fetch('http://localhost:3000/api/publishBooks');
+            const members = await response.json();
+            console.log(members);
+            const membersTableBody = document.querySelector('#membersTable tbody');
+            membersTableBody.innerHTML = '';
+
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.ID}</td>
+                    <td>${member.PublisherId}</td>
+                    <td>${member.BookID}</td>
+                    <td>
+                        <button onclick="deleteMember(event, ${member.ID})">Delete</button>
+                    </td>
+                `;
+                row.addEventListener('click', () => {
+                    history.pushState(null, '', `/api/publishBooks/${member.ID}`);
+                    showMemberDetail(member.ID);
+                });
+                membersTableBody.appendChild(row);
+            });
+        }
+    
+        async function deleteMember(event, id) {
+            event.stopPropagation();
+            await fetch(`http://localhost:3000/api/publishBooks/${id}`, {
+                method: 'DELETE'
+            });
+            fetchMembers();
+        }
+    
+        document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const PublisherId = document.getElementById('PublisherId').value;
+            const BookID = document.getElementById('BookID').value;
+            
+            await fetch('http://localhost:3000/api/publishBooks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ PublisherId, BookID })
+            });
+            
+            document.getElementById('addMemberForm').reset();
+            fetchMembers();
+        });
+    
+        async function showMemberDetail(id) {
+            const response = await fetch(`http://localhost:3000/api/publishBooks/${id}`);
+            const member = await response.json();
+            
+            if (member && member[0]) {
+                const details = member[0];
+                console.log(details);
+                document.getElementById('ID').textContent = details.ID;
+                document.getElementById('PublisherIdDetail').textContent = details.PublisherId;
+                document.getElementById('BookIDDetail').textContent = details.BookID;
+            
+                document.getElementById('PublisherIdInput').value = details.PublisherId;
+                document.getElementById('BookIDInput').value = details.BookID;
+            
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('memberDetail').style.display = 'block';
+            }
+        }
+    
+        function showMembers() {
+            history.pushState(null, '', '/api/publishBooks');
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('memberDetail').style.display = 'none';
+        }
+    
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const memberId = document.getElementById('ID').textContent;
+            const updatedMember = {
+                PublisherId: document.getElementById('PublisherIdInput').value,
+                BookID: document.getElementById('BookIDInput').value,
+            };
+    
+            const response = await fetch(`http://localhost:3000/api/publishBooks/${memberId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedMember),
+            });
+    
+            if (response.ok) {
+                showMemberDetail(memberId);
+            } else {
+                console.error('Failed to update member');
+            }
+        });
+    
+        window.onpopstate = function() {
+            if (window.location.pathname.startsWith('/api/publishBooks/')) {
+                const memberId = window.location.pathname.split('/').pop();
+                showMemberDetail(memberId);
+            } else {
+                showMembers();
+            }
+        };
+    
+        fetchMembers();
+    </script>
+    </body>
+</html>
