@@ -18,8 +18,12 @@
         <textarea id="description" placeholder="Description"></textarea>
         <input type="number" id="price" placeholder="Price" required />
         <input type="number" id="stock" placeholder="Stock" required />
-        <input type="number" id="publisherId" placeholder="publisherId" required />
-        <input type="number" id="categoryID" placeholder="categoryID" required />
+        <input
+          type="number"
+          id="categoryID"
+          placeholder="categoryID"
+          required
+        />
         <button type="submit">Update Book</button>
       </form>
       <button id="delete-book-btn">Delete Book</button>
@@ -40,14 +44,16 @@
         function getBook() {
           fetch(`http://localhost:3000/api/books/${bookId}`)
             .then((response) => {
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Book not found');
-                    } else {
-                        throw new Error('Network response was not ok ' + response.statusText);
-                    }
+              if (!response.ok) {
+                if (response.status === 404) {
+                  throw new Error("Book not found");
+                } else {
+                  throw new Error(
+                    "Network response was not ok " + response.statusText
+                  );
                 }
-                return response.json();
+              }
+              return response.json();
             })
             .then((book) => {
               console.log(book[0]);
@@ -59,7 +65,6 @@
                         <p>Description: ${book[0].Description}</p>
                         <p>Price: $${book[0].price}</p>
                         <p>Stock: ${book[0].stock}</p>
-                        <p>publisherId: ${book[0].publisherId}</p>
                         <p>CategoryID: ${book[0].categoryID}</p>
 
                     `;
@@ -69,8 +74,7 @@
                 updateBookForm.description.value = book[0].Description;
                 updateBookForm.price.value = book[0].price;
                 updateBookForm.stock.value = book[0].stock;
-                updateBookForm.categoryID.value = book[0].publisherId;
-                updateBookForm.publisherId.value = book[0].categoryID;
+                updateBookForm.categoryID.value = book[0].categoryID;
               } else {
                 bookInfo.innerHTML = "<p>Book not found</p>";
               }
@@ -88,7 +92,9 @@
             Description: updateBookForm.description.value,
             price: parseFloat(updateBookForm.price.value),
             stock: parseInt(updateBookForm.stock.value, 10),
+            categoryID: parseInt(updateBookForm.categoryID.value),
           };
+          console.log(updatedBook);
 
           fetch(`/api/books/${bookId}`, {
             method: "PUT",

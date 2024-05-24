@@ -33,7 +33,7 @@ module.exports = {
 
     addBook: function (book, callback) {
         var request = new Request(
-            "INSERT INTO Book (categoryID, Title, Author, ISBN, Description, price, stock, publisherId, EmpId) VALUES (@categoryID, @Title, @Author, @ISBN, @Description, @price, @stock, @publisherId, @EmpId);",
+            "INSERT INTO Book (categoryID, Title, Author, ISBN, Description, price, stock, EmpId) VALUES (@categoryID, @Title, @Author, @ISBN, @Description, @price, @stock, @EmpId);",
             function (err) {
                 if (err) {
                     callback(err);
@@ -49,7 +49,6 @@ module.exports = {
         request.addParameter('Description', TYPES.NVarChar, book.Description || null); // Handle optional Description
         request.addParameter('price', TYPES.Float, book.price);
         request.addParameter('stock', TYPES.Int, book.stock);
-        request.addParameter('publisherId', TYPES.Int, book.publisherId);
         request.addParameter('EmpId', TYPES.Int, book.EmpId);
         connection.execSql(request);
     },
@@ -95,7 +94,6 @@ module.exports = {
             Description: TYPES.NVarChar,
             price: TYPES.Float,
             stock: TYPES.Int,
-            publisherId: TYPES.Int,
             EmpId: TYPES.Int
         };
 

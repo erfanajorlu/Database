@@ -25,7 +25,7 @@ module.exports = {
         var newBook = req.body;
 
         // Ensure all required fields are present
-        const requiredFields = ['categoryID', 'Title', 'Author', 'ISBN', 'price', 'stock', 'publisherId', 'EmpId'];
+        const requiredFields = ['categoryID', 'Title', 'Author', 'ISBN', 'price', 'stock', 'EmpId'];
         for (const field of requiredFields) {
             if (!newBook[field]) {
                 return res.status(400).send(`Missing required field: ${field}`);
