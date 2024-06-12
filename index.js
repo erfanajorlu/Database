@@ -14,12 +14,26 @@ var managerRoutes = require('./routes/managerRoutes');
 var publisherRoutes = require('./routes/publisherRoutes');
 var loanRoutes = require('./routes/loanRoutes');
 var publisherBookRoutes = require('./routes/publisherBookRoutes');
+var reportRoutes = require('./routes/reportRoutes');
 var connection = require('./config/dbConfig');
+
+app.use(cors());
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'OPTIONS, GET, POST, PUT, PATCH, DELETE'
+    );
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+  });
+// Set up EJS
+app.set('view engine', 'ejs');
 
 // Serve static files from the root directory
 app.use(express.static(path.join(__dirname, 'public'))); // Public folder for static files
 
-app.use(cors());
+  
 app.use(bodyParser.json());
 app.use('/api', bookRoutes);
 app.use('/api', memberRoutes);
@@ -32,11 +46,15 @@ app.use('/api', managerRoutes);
 app.use('/api', publisherRoutes);
 app.use('/api', loanRoutes);
 app.use('/api', publisherBookRoutes);
+app.use('/api', reportRoutes);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'main.html'));
 });
 
+app.get('/reports', (req, res) => {
+    res.render('reports');
+});
 connection.on('connect', function (err) {
     if (err) {
         console.log('Error: ', err);

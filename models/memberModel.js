@@ -43,7 +43,7 @@ module.exports = {
     addMember: function (member, callback) {
         console.log('Adding member:', member);
         var request = new Request(
-            "INSERT INTO Member (Fname, Lname, Email, PhoneNumber) OUTPUT INSERTED.ID VALUES (@Fname, @Lname, @Email, @PhoneNumber);",
+            "INSERT INTO Member (Fname, Lname, Email, PhoneNumber) VALUES (@Fname, @Lname, @Email, @PhoneNumber);",
             function (err, rowCount, rows) {
                 if (err) {
                     console.error('Error inserting member:', err);

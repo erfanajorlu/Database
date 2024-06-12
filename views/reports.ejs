@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Change Log Reports</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ddd;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .filter {
+        margin-bottom: 20px;
+      }
+      .buttons {
+        margin-bottom: 20px;
+      }
+      .buttons button {
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Change Log Reports</h1>
+
+    <div class="filter">
+      <label for="operationType">Filter by Operation Type:</label>
+      <select id="operationType" onchange="filterReports()">
+        <option value="">All</option>
+        <option value="INSERT">INSERT</option>
+        <option value="UPDATE">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      <label for="username">Filter by User:</label>
+      <select id="username" onchange="fetchChangesByUser()">
+        <!-- Options will be populated dynamically -->
+      </select>
+    </div>
+
+    <div class="buttons">
+      <button onclick="fetchAndDisplayLogs()">All Changes</button>
+      <button onclick="fetchLogs('member')">Member Changes</button>
+      <button onclick="fetchLogs('loan')">Loan Changes</button>
+      <button onclick="fetchLogs('employee')">Employee Changes</button>
+      <button onclick="fetchLogs('book')">Book Changes</button>
+      <button onclick="fetchLogs('publisher')">Publisher Changes</button>
+    </div>
+
+    <h2>All Changes</h2>
+    <table id="AllChangesTable">
+      <thead>
+        <tr>
+          <th>LogID</th>
+          <th>TableName</th>
+          <th>RecordID</th>
+          <th>OperationType</th>
+          <th>ChangeTime</th>
+          <th>ChangedBy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data will be inserted here via JavaScript -->
+      </tbody>
+    </table>
+
+    <h2>Daily Changes</h2>
+    <table id="dailyChangesTable">
+      <thead>
+        <tr>
+          <th>LogID</th>
+          <th>TableName</th>
+          <th>RecordID</th>
+          <th>OperationType</th>
+          <th>ChangeTime</th>
+          <th>ChangedBy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data will be inserted here via JavaScript -->
+      </tbody>
+    </table>
+
+    <h2>Changes by User</h2>
+    <table id="userChangesTable">
+      <thead>
+        <tr>
+          <th>LogID</th>
+          <th>TableName</th>
+          <th>RecordID</th>
+          <th>OperationType</th>
+          <th>ChangeTime</th>
+          <th>ChangedBy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data will be inserted here via JavaScript -->
+      </tbody>
+    </table>
+
+    <script>
+      const populateUserDropdown = async () => {
+        const userDropdown = document.getElementById("username");
+        userDropdown.innerHTML = '<option value="">All</option>'; // Clear existing options
+
+        const users = ["erfan", "DESKTOP-SGMB1F2\\asus"];
+        users.forEach((username) => {
+          const option = document.createElement("option");
+          option.value = username;
+          option.textContent = username;
+          userDropdown.appendChild(option);
+        });
+        console.log("Erfannnn");
+      };
+      const fetchAndDisplayLogs = async () => {
+        await fetch("http://localhost:3000/api/reports")
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector("#AllChangesTable tbody");
+            tableBody.innerHTML = ""; // Clear the table body
+            data.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                            <td>${row.LogID}</td>
+                            <td>${row.TableName}</td>
+                            <td>${row.RecordID}</td>
+                            <td>${row.OperationType}</td>
+                            <td>${row.ChangeTime}</td>
+                            <td>${row.ChangedBy}</td>
+                        `;
+              tableBody.appendChild(tr);
+            });
+          });
+
+        // Fetch and display daily changes
+        await fetch("http://localhost:3000/api/reports/daily")
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector(
+              "#dailyChangesTable tbody"
+            );
+            tableBody.innerHTML = ""; // Clear the table body
+            data.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                            <td>${row.LogID}</td>
+                            <td>${row.TableName}</td>
+                            <td>${row.RecordID}</td>
+                            <td>${row.OperationType}</td>
+                            <td>${row.ChangeTime}</td>
+                            <td>${row.ChangedBy}</td>
+                        `;
+              tableBody.appendChild(tr);
+            });
+          });
+
+        // Fetch and populate the user dropdown
+        await fetch(`http://localhost:3000/api/reports/user?username=erfan`)
+          .then((response) => response.json())
+          .then((users) => {
+            const userDropdown = document.getElementById("username");
+            userDropdown.innerHTML = '<option value="">All</option>'; // Clear existing options
+            users.forEach((user) => {
+              const option = document.createElement("option");
+              option.value = user.username;
+              option.textContent = user.username;
+              userDropdown.appendChild(option);
+            });
+          });
+      };
+
+      const fetchChangesByUser = async () => {
+        const username = document.getElementById("username").value;
+        if (!username) return;
+
+        await fetch(
+          `http://localhost:3000/api/reports/user?username=${encodeURIComponent(
+            username
+          )}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector("#userChangesTable tbody");
+            tableBody.innerHTML = ""; // Clear the table body
+            data.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                    <td>${row.LogID}</td>
+                    <td>${row.TableName}</td>
+                    <td>${row.RecordID}</td>
+                    <td>${row.OperationType}</td>
+                    <td>${row.ChangeTime}</td>
+                    <td>${row.ChangedBy}</td>
+                `;
+              tableBody.appendChild(tr);
+            });
+          });
+      };
+
+      const fetchLogs = async (tableName) => {
+        await fetch(`http://localhost:3000/api/reports/${tableName}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector("#AllChangesTable tbody");
+            tableBody.innerHTML = ""; // Clear the table body
+            data.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                            <td>${row.LogID}</td>
+                            <td>${row.TableName}</td>
+                            <td>${row.RecordID}</td>
+                            <td>${row.OperationType}</td>
+                            <td>${row.ChangeTime}</td>
+                            <td>${row.ChangedBy}</td>
+                        `;
+              tableBody.appendChild(tr);
+            });
+
+            
+          });
+      };
+
+      const filterReports = async () => {
+        const operationType = document.getElementById("operationType").value;
+        await fetch("http://localhost:3000/api/reports/daily")
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector(
+              "#dailyChangesTable tbody"
+            );
+            tableBody.innerHTML = ""; // Clear the table body
+            data
+              .filter(
+                (row) => !operationType || row.OperationType === operationType
+              )
+              .forEach((row) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                                <td>${row.LogID}</td>
+                                <td>${row.TableName}</td>
+                                <td>${row.RecordID}</td>
+                                <td>${row.OperationType}</td>
+                                <td>${row.ChangeTime}</td>
+                                <td>${row.ChangedBy}</td>
+                            `;
+                tableBody.appendChild(tr);
+              });
+          });
+
+        await fetch("http://localhost:3000/api/reports")
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document.querySelector("#AllChangesTable tbody");
+            tableBody.innerHTML = ""; // Clear the table body
+            data
+              .filter(
+                (row) => !operationType || row.OperationType === operationType
+              )
+              .forEach((row) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                                <td>${row.LogID}</td>
+                                <td>${row.TableName}</td>
+                                <td>${row.RecordID}</td>
+                                <td>${row.OperationType}</td>
+                                <td>${row.ChangeTime}</td>
+                                <td>${row.ChangedBy}</td>
+                            `;
+                tableBody.appendChild(tr);
+              });
+          });
+      };
+
+      document.addEventListener("DOMContentLoaded", async () => {
+          await fetchAndDisplayLogs();
+          await populateUserDropdown();
+    });
+    </script>
+  </body>
+</html>
